@@ -5,8 +5,9 @@ ocupado se dibuja como una nube de puntos muestreada de |ψ|², la densidad de p
 de la mecánica cuántica. Al lado, la tabla periódica completa (118 elementos) con datos
 reales de NIST, PubChem y el OIEA.
 
-**▶ Abrirlo en el navegador:** <https://juaneprietoreyes-lang.github.io/atomos/>
-(funciona en ordenador, tableta y móvil; no hay que instalar nada)
+**▶ Abrirlo en el navegador:** <https://atomos-drf.pages.dev/> (Cloudflare) o
+<https://juaneprietoreyes-lang.github.io/atomos/> (GitHub Pages). Funciona en ordenador,
+tableta y móvil; no hay que instalar nada.
 
 ![La app con el nitrógeno y su espectro de NIST](docs/app.jpg)
 
@@ -17,6 +18,18 @@ reales de NIST, PubChem y el OIEA.
 *Coloreados por el signo de ψ: cálido = positivo, frío = negativo. Hidrógeno excitado, solución exacta.*
 
 ## Qué se puede hacer
+
+- **Dos niveles**: *Sencillo* (protones, neutrones, electrones y capas, con palabras de
+  clase) y *Completo* (orbitales, Z<sub>ef</sub>, espectros, fase de ψ…).
+- **🎮 Modo juego**: rondas de 10 preguntas con puntos, racha y récord. Algunas se
+  contestan tocando la tabla periódica. En *Sencillo*: protones → elemento, buscar en la
+  tabla, neutrones, iones, familias y núcleos estables o radiactivos. En *Completo*, además:
+  configuraciones (con las excepciones como trampa), forma de los orbitales, color de la luz
+  del hidrógeno y electronegatividad. Las preguntas salen de los mismos datos reales.
+- **Editor del núcleo**: añadir o quitar protones (cambia el elemento) y neutrones (cambia
+  el isótopo). Con los 3383 núcleos conocidos del OIEA se dice si es estable, radiactivo
+  (con su semivida y cómo se desintegra) o si nunca se ha observado. Si es inestable, la
+  pantalla da un temblor al crearlo y **el átomo tiembla sin parar, más cuanto menos dura**.
 
 - **Elegir cualquier elemento** en la tabla (o con el buscador, tecla `/`): el átomo se
   reconstruye con una transición suave. Las capas que comparten dos átomos se encogen o
@@ -103,23 +116,27 @@ Esto es lo que el simulador **no** hace bien, a propósito o por no existir solu
    salto están sumadas a todos los m finales. La animación va unos mil millones de veces
    más lenta que la realidad. La emisión de dos fotones del 2s se muestra sin calcular su
    espectro continuo. El fotón animado no tiene su longitud de onda a escala.
-9. **Espectros.** Líneas de NIST del átomo neutro en el visible (las 40 más intensas). Las
+9. **Núcleos y juego.** «Nunca observado» significa que no está en la tabla del OIEA,
+   no que sea imposible. El temblor es una forma visual de decir «dura poco»: su
+   intensidad sigue el logaritmo de la semivida, no ninguna magnitud física concreta.
+10. **Espectros.** Líneas de NIST del átomo neutro en el visible (las 40 más intensas). Las
    intensidades relativas dependen de la fuente de luz con que se midieron.
-10. **Modelo de Bohr.** Es histórico y está mal: los electrones no tienen órbitas
+11. **Modelo de Bohr.** Es histórico y está mal: los electrones no tienen órbitas
     definidas. Para átomos de varios electrones las órbitas se dibujan sin escala.
-11. **Superpesados.** Para Z ≥ 104 las configuraciones son cálculos teóricos; varios
+12. **Superpesados.** Para Z ≥ 104 las configuraciones son cálculos teóricos; varios
     estados, categorías y semividas son predicciones o datos de isótopos poco confirmados.
-12. **Colores de la luz.** La conversión de λ a color es una aproximación: los colores
+13. **Colores de la luz.** La conversión de λ a color es una aproximación: los colores
     espectrales puros no caben en una pantalla sRGB y se desaturan un poco.
 
 ## Verificación
 
-- `npm test`: 84 tests (Vitest) de física y datos: normalización de R<sub>nl</sub> (n ≤ 7)
+- `npm test`: 92 tests (Vitest) de física, datos y juego: normalización de R<sub>nl</sub> (n ≤ 7)
   y de Y<sub>lm</sub> (l ≤ 3), ortogonalidad, posición exacta de los nodos, Slater (Na 3s,
   K 4s, C 2p, Fe 3d/4s, Zn 3d/4s), Hα ≈ 656,47 nm en vacío y 656,28 nm en aire, Hβ, Lyman-α,
   límite de Balmer, desplazamiento isotópico del deuterio, A(2p→1s) = 6,265·10⁸ s⁻¹ (NIST),
   muestreo (⟨r⟩, el hueco del 2s, el anillo del d<sub>z²</sub> con el 38,5 %), configuraciones
-  de Cr, Cu, Pd, Au y demás excepciones, iones (Fe²⁺, Ce³⁺, Cl⁻, O²⁻) y el dataset completo.
+  de Cr, Cu, Pd, Au y demás excepciones, iones (Fe²⁺, Ce³⁺, Cl⁻, O²⁻), estabilidad de núcleos
+  (¹²C estable, ¹⁴C con 5700 años) y que cada pregunta del juego tenga su respuesta correcta.
 - Recorrido automático de los 118 elementos en el navegador (neutro, catión, anión, Bohr,
   promedio esférico y escala real): sin errores.
 - Comprobación visual de 2p, 3d<sub>z²</sub> y 4f (capturas de arriba).
@@ -138,6 +155,10 @@ npm run dev
 | `npm run build` | comprobación de tipos + compilación a `dist/` |
 | `npm run data:fetch` | vuelve a descargar las fuentes a `data/raw/` |
 | `npm run data:build` | regenera `src/data/*.json` y `data/INFORME.md` |
+| `npm run deploy:cloudflare` | compila y sube la web a Cloudflare Pages (proyecto `atomos`) |
+
+GitHub Pages se actualiza solo con cada `git push`; Cloudflare, con `npm run deploy:cloudflare`
+(hace falta haber iniciado sesión una vez con `npx wrangler login`).
 
 Estructura: `src/physics` (cálculos puros, sin DOM), `src/data` (datos generados),
 `src/render` (Three.js), `src/ui` (interfaz sin framework) y `src/workers` (muestreo).
