@@ -7,7 +7,7 @@ import {
   orbitalOccupations,
   parseConfiguration,
 } from '../../src/physics/configuration';
-import { occupiedOrbitals } from '../../src/physics/orbitals';
+import { displayedMeanRadius, occupiedOrbitals, radialScale } from '../../src/physics/orbitals';
 
 const ion = (z: number, charge: number) => formatConfiguration(ionConfiguration(byZ(z).configuration.shells, charge));
 
@@ -69,5 +69,30 @@ describe('ocupación de orbitales', () => {
     const orbs = occupiedOrbitals(79, byZ(79).configuration.shells, 'hund');
     expect(orbs).toHaveLength(40);
     expect(orbs.reduce((s, o) => s + o.occupancy, 0)).toBe(79);
+  });
+});
+
+
+describe('tamaño de las capas (escala radial)', () => {
+  it('un solo electrón: hidrogenoide exacto (H 1s: ⟨r⟩ = 1,5 a₀; He⁺ 1s: 0,75 a₀)', () => {
+    const h = occupiedOrbitals(1, byZ(1).configuration.shells, 'hund')[0];
+    expect(displayedMeanRadius(h)).toBeCloseTo(1.5, 12);
+    const heIon = occupiedOrbitals(2, ionConfiguration(byZ(2).configuration.shells, 1), 'hund')[0];
+    expect(displayedMeanRadius(heIon)).toBeCloseTo(0.75, 12);
+  });
+
+  it('para l = n − 1 con n ≤ 3 coincide con 1/Z_eff', () => {
+    expect(radialScale(2, 1, 3.25, false)).toBeCloseTo(1 / 3.25, 12);
+    expect(radialScale(3, 2, 6.25, false)).toBeCloseTo(1 / 6.25, 12);
+  });
+
+  it('capas de valencia de tamaño razonable: Na 3s ≈ 4,8 a₀, Cs 6s ≈ 9 a₀ (no 24)', () => {
+    const val = (z: number) => {
+      const orbs = occupiedOrbitals(z, byZ(z).configuration.shells, 'hund');
+      return displayedMeanRadius(orbs[orbs.length - 1]);
+    };
+    expect(val(11)).toBeCloseTo(4.77, 2);
+    expect(val(55)).toBeGreaterThan(8);
+    expect(val(55)).toBeLessThan(10);
   });
 });
