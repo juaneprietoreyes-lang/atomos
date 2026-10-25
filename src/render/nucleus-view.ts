@@ -74,6 +74,7 @@ export class NucleusView {
     this.group.rotation.z += dt * 0.15;
     // Un núcleo inestable no se está quieto: tiembla más cuanto menos dura
     const j = this.jitter * this.radius * 0.35;
-    this.group.position.set((Math.random() - 0.5) * j, (Math.random() - 0.5) * j, (Math.random() - 0.5) * j);
+    if (j > 0) this.group.position.set((Math.random() - 0.5) * j, (Math.random() - 0.5) * j, (Math.random() - 0.5) * j);
+    else this.group.position.set(0, 0, 0);
   }
 }
