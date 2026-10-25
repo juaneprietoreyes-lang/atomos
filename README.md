@@ -19,8 +19,9 @@ tableta y móvil; no hay que instalar nada.
 
 ## Qué se puede hacer
 
-- **Dos niveles**: *Sencillo* (protones, neutrones, electrones y capas, con palabras de
-  clase) y *Completo* (orbitales, Z<sub>ef</sub>, espectros, fase de ψ…).
+- **Dos niveles**: *Sencillo*, pensado para 3º de ESO (un solo botón «Nube | Capas», cada
+  capa K, L, M… de un color y un panel «Construye tu átomo» con protones, neutrones y
+  electrones), y *Completo* (orbitales, Z<sub>ef</sub>, espectros, fase de ψ…).
 - **🎮 Modo juego**: rondas de 10 preguntas con puntos, racha y récord. Algunas se
   contestan tocando la tabla periódica. En *Sencillo*: protones → elemento, buscar en la
   tabla, neutrones, iones, familias y núcleos estables o radiactivos. En *Completo*, además:
