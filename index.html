@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Simulador de átomos mecánico-cuántico: orbitales como nubes de probabilidad y tabla periódica completa con datos de NIST." />
+    <title>Átomos · simulador cuántico</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <h1>Átomos <span class="brand-sub">simulador cuántico</span></h1>
+        </div>
+        <div class="search" id="search"></div>
+      </header>
+      <main class="layout">
+        <section class="viewer" id="viewer" aria-label="Visor 3D del átomo"></section>
+        <aside class="side">
+          <section class="ptable-wrap" aria-label="Tabla periódica">
+            <div class="table-tools" id="table-tools"></div>
+            <div class="ptable" id="ptable"></div>
+            <div class="legend" id="category-legend"></div>
+          </section>
+          <section class="card" id="card" aria-live="polite"></section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,8 @@
+Descarga: 2026-10-25T10:11:32.792Z
+
+bowserinator.json	340214 bytes	https://raw.githubusercontent.com/Bowserinator/Periodic-Table-JSON/master/PeriodicTableJSON.json
+pubchem.json	44488 bytes	https://pubchem.ncbi.nlm.nih.gov/rest/pug/periodictable/JSON
+nist-ie.csv	15156 bytes	https://physics.nist.gov/cgi-bin/ASD/ie.pl?spectra=H-Og+I&units=1&format=2&order=0&at_num_out=on&sp_name_out=on&shells_out=on&conf_out=on&level_out=on&e_out=0&unc_out=on&biblio=on&submit=Retrieve+Data
+iaea-ground-states.csv	900613 bytes	https://www-nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all
+wikidata-es.csv	2089 bytes	https://query.wikidata.org/sparql?query=SELECT%20%3Fz%20%3Fes%20WHERE%20%7B%20%3Fe%20wdt%3AP31%20wd%3AQ11344%3B%20wdt%3AP1086%20%3Fz.%20%3Fe%20rdfs%3Alabel%20%3Fes%20FILTER(lang(%3Fes)%3D%22es%22)%20%7D%20ORDER%20BY%20xsd%3Ainteger(%3Fz)
+nist-lines/*.csv	98 elementos con líneas	https://physics.nist.gov/cgi-bin/ASD/lines1.pl?spectra=X+I&limits_type=0&low_w=380&upp_w=750&unit=1&de=0&format=2&line_out=0&remove_js=on&en_unit=0&output=0&page_size=5000&show_obs_wl=1&show_calc_wl=1&order_out=0&show_av=2&A_out=0&intens_out=on&allowed_out=1&forbid_out=1&submit=Retrieve+Data
