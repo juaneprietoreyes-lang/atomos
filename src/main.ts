@@ -158,6 +158,14 @@ function render(s: AppState, prev?: AppState): void {
     store.set({ hidden }),
   );
   renderScaleInfo(atom, s);
+  stage.renderer.domElement.setAttribute(
+    'aria-label',
+    s.model === 'bohr'
+      ? `Esquema de Bohr de ${atom.element.name}: ${atom.electrons} electrones en órbitas circulares.`
+      : `Nubes de probabilidad de ${atom.element.name}: ${atom.orbitals.length} orbitales ocupados (${[
+          ...new Set(atom.orbitals.map((o) => o.subshell)),
+        ].join(', ')}).`,
+  );
   renderActions(hud.actions, atom, s, excitation);
   spectrum.render(atom, s.charge, s.lastPhoton);
   hud.legend.hidden = s.model !== 'quantum' || atom.electrons === 0;

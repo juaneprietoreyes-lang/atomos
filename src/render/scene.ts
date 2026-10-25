@@ -28,6 +28,7 @@ export function createStage(container: HTMLElement): Stage {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
   renderer.domElement.className = 'stage-canvas';
+  renderer.domElement.setAttribute('role', 'img');
   container.append(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -44,7 +45,7 @@ export function createStage(container: HTMLElement): Stage {
   scene.add(rim);
 
   const camera = new THREE.PerspectiveCamera(40, 1, 1e-6, 1e5);
-  camera.position.set(6, 3.5, 9);
+  camera.position.set(5.2, 2.2, 9.6);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;

@@ -22,6 +22,8 @@ import { num } from './ui/format';
  */
 export class Excitation {
   private busy = false;
+  /** Cambia con cada reset: un fotón en vuelo de otro átomo ya no aplica su efecto */
+  private epoch = 0;
   private autoTimer: number | undefined;
   auto = false;
   onChange: () => void = () => {};
@@ -70,6 +72,7 @@ export class Excitation {
     const ev: PhotonEvent = { kind: 'absorb', nLower: c.n, nUpper: nUp, vacuumNm, tableNm, lifetimeS: null };
     this.busy = true;
     this.onChange();
+    const epoch = this.epoch;
     this.fx.launch({
       direction: 'absorb',
       nm: vacuumNm,
@@ -77,6 +80,7 @@ export class Excitation {
       label: this.label(ev),
       radius: this.radius(),
       onDone: () => {
+        if (epoch !== this.epoch) return;
         this.busy = false;
         store.set({ excited: { n: nUp, l, m: 0 }, lastPhoton: ev });
         this.scheduleAuto();
@@ -124,6 +128,7 @@ export class Excitation {
     this.busy = true;
     const next = pick.n === 1 && pick.l === 0 ? null : { n: pick.n, l: pick.l, m: 0 };
     store.set({ excited: next, lastPhoton: ev });
+    const epoch = this.epoch;
     this.fx.launch({
       direction: 'emit',
       nm: ev.vacuumNm,
@@ -131,6 +136,7 @@ export class Excitation {
       label: this.label(ev),
       radius: this.radius(),
       onDone: () => {
+        if (epoch !== this.epoch) return;
         this.busy = false;
         this.onChange();
         this.scheduleAuto();
@@ -148,6 +154,7 @@ export class Excitation {
     this.busy = true;
     store.set({ excited: null, lastPhoton: ev });
     let left = 2;
+    const epoch = this.epoch;
     for (let i = 0; i < 2; i++)
       this.fx.launch({
         direction: 'emit',
@@ -156,6 +163,7 @@ export class Excitation {
         label: i === 0 ? 'dos fotones · espectro continuo' : '',
         radius: this.radius(),
         onDone: () => {
+          if (epoch !== this.epoch) return;
           if (--left === 0) {
             this.busy = false;
             this.onChange();
@@ -173,6 +181,7 @@ export class Excitation {
   reset(): void {
     window.clearTimeout(this.autoTimer);
     this.busy = false;
+    this.epoch++;
   }
 
   private scheduleAuto(): void {

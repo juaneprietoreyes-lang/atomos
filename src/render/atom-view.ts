@@ -34,10 +34,10 @@ export const frameRadius = (orbitals: OrbitalSpec[]): number =>
  * electrón entre los orbitales visibles (así la densidad relativa es la real y, al
  * aislar un orbital, se dibuja con muchos más puntos).
  */
-export function pointBudget(orbitals: OrbitalSpec[]): Map<OrbitalSpec, number> {
+export function pointBudget(orbitals: OrbitalSpec[], total = TOTAL_POINTS): Map<OrbitalSpec, number> {
   const totalOcc = orbitals.reduce((s, o) => s + o.occupancy, 0);
   const maxOcc = Math.max(1, ...orbitals.map((o) => o.occupancy));
-  const perElectron = Math.min(MAX_POINTS / maxOcc, TOTAL_POINTS / Math.max(totalOcc, 1e-9));
+  const perElectron = Math.min(MAX_POINTS / maxOcc, total / Math.max(totalOcc, 1e-9));
   return new Map(orbitals.map((o) => [o, Math.round(o.occupancy * perElectron)]));
 }
 
@@ -56,6 +56,11 @@ export class AtomView {
   private visiblePoints = 1;
   private visibleRadius = 1;
   private exposure = 0.4;
+  /** Calidad adaptativa: si el equipo no llega a ~45 fps se dibujan menos puntos */
+  private quality = 1;
+  private slowFrames = 0;
+  private sampledFrames = 0;
+  private last: AtomScene | null = null;
 
   constructor(private readonly stage: Stage) {
     stage.world.add(this.nucleus.group, this.cloudGroup, this.axes.group);
@@ -63,9 +68,10 @@ export class AtomView {
   }
 
   update(s: AtomScene): void {
+    this.last = s;
     const gen = ++this.generation;
     const visible = s.orbitals.filter((o) => !s.hidden.has(o.label));
-    const budget = pointBudget(visible);
+    const budget = pointBudget(visible, TOTAL_POINTS * this.quality);
     this.visiblePoints = [...budget.values()].reduce((a, b) => a + b, 0);
     this.visibleRadius = frameRadius(visible.length ? visible : s.orbitals);
     const active = new Set<string>();
@@ -123,6 +129,7 @@ export class AtomView {
   }
 
   private step(dt: number): void {
+    this.adaptQuality(dt);
     const k = 1 - Math.exp(-dt * 6);
     this.cloudsOpacity += (this.targetCloudsOpacity - this.cloudsOpacity) * k;
     const { camera, controls, renderer } = this.stage;
@@ -142,5 +149,19 @@ export class AtomView {
       cloud.step(dt, this.cloudsOpacity * this.exposure);
     }
     this.nucleus.step(dt);
+  }
+
+  private adaptQuality(dt: number): void {
+    // Con la pestaña en segundo plano los fotogramas se paran: eso no cuenta
+    if (dt > 0.2 || document.hidden || this.quality <= 0.35) return;
+    this.sampledFrames++;
+    if (dt > 1 / 45) this.slowFrames++;
+    if (this.sampledFrames < 120) return;
+    if (this.slowFrames > 80 && this.last) {
+      this.quality = Math.max(0.35, this.quality * 0.7);
+      this.update(this.last);
+    }
+    this.sampledFrames = 0;
+    this.slowFrames = 0;
   }
 }

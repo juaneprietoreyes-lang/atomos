@@ -107,6 +107,7 @@ export function renderCard(container: HTMLElement, el: ElementData, opts: CardOp
         }</div>
       </div>
     </header>
+    ${charge !== 0 ? '<p class="card-note">La configuración es la del ion; el resto de propiedades son del átomo neutro.</p>' : ''}
     <dl class="props">
       ${row('Configuración', `<span class="cfg">${prettyConfiguration(cfgText)}</span> ${cfgTags}`, cfgExtra)}
       ${row('Masa atómica', mass)}
