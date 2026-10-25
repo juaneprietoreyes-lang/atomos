@@ -309,6 +309,7 @@ function render(s: AppState, prev?: AppState): void {
   bohr.targetOpacity = s.model === 'bohr' ? 1 : 0;
 
   const instability = s.hideIdentity ? 0 : shakeIntensity(atom.stability);
+  bohr.jitter = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : instability;
   view.update({
     orbitals: atom.orbitals,
     hidden: s.hidden,

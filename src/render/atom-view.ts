@@ -48,6 +48,10 @@ export class AtomView {
   readonly axes = new Axes();
   private readonly clouds = new Map<string, OrbitalCloud>();
   private readonly cloudGroup = new THREE.Group();
+  /** Núcleo + nubes: lo que tiembla entero si el núcleo es inestable (los ejes no) */
+  private readonly atomGroup = new THREE.Group();
+  private instability = 0;
+  private readonly reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
   private cloudsOpacity = 1;
   private targetCloudsOpacity = 1;
   private lastFrameKey = '';
@@ -65,7 +69,8 @@ export class AtomView {
   private last: AtomScene | null = null;
 
   constructor(private readonly stage: Stage) {
-    stage.world.add(this.nucleus.group, this.cloudGroup, this.axes.group);
+    this.atomGroup.add(this.nucleus.group, this.cloudGroup);
+    stage.world.add(this.atomGroup, this.axes.group);
     stage.onFrame((dt) => this.step(dt));
   }
 
@@ -119,6 +124,7 @@ export class AtomView {
     this.axes.group.visible = s.cloudsOpacity > 0;
     this.nucleus.setNucleons(s.protons, s.neutrons);
     this.nucleus.jitter = s.instability;
+    this.instability = s.instability;
     this.nucleus.targetRadius = s.nucleusRadius;
     if (this.nucleus.radius === 0) this.nucleus.radius = s.nucleusRadius;
 
@@ -133,6 +139,7 @@ export class AtomView {
 
   private step(dt: number): void {
     this.adaptQuality(dt);
+    this.tremble();
     const k = 1 - Math.exp(-dt * 6);
     this.cloudsOpacity += (this.targetCloudsOpacity - this.cloudsOpacity) * k;
     const { camera, controls, renderer } = this.stage;
@@ -166,5 +173,24 @@ export class AtomView {
     }
     this.sampledFrames = 0;
     this.slowFrames = 0;
+  }
+
+  /**
+   * Átomo inestable: todo el átomo tiembla sin parar, más cuanto más corta es la
+   * semivida (hasta un 6 % de su tamaño, con un ligero cabeceo). El temblor puntual de
+   * la pantalla al cambiar el núcleo lo hace la interfaz aparte.
+   */
+  private tremble(): void {
+    const j = this.reduceMotion ? 0 : this.instability;
+    if (j <= 0) {
+      this.atomGroup.position.set(0, 0, 0);
+      this.atomGroup.rotation.set(0, 0, 0);
+      return;
+    }
+    const amp = this.visibleRadius * 0.06 * j;
+    const r = () => (Math.random() * 2 - 1) * amp;
+    this.atomGroup.position.set(r(), r(), r());
+    const tilt = 0.05 * j;
+    this.atomGroup.rotation.set((Math.random() * 2 - 1) * tilt, (Math.random() * 2 - 1) * tilt, (Math.random() * 2 - 1) * tilt);
   }
 }

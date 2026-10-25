@@ -20,6 +20,9 @@ export class BohrView {
   private labels: HTMLElement[] = [];
   private opacity = 0;
   targetOpacity = 0;
+  /** 0–1: temblor del esquema si el núcleo es inestable */
+  jitter = 0;
+  private frameRadius = 1;
 
   constructor(
     private readonly stage: Stage,
@@ -33,6 +36,7 @@ export class BohrView {
 
   /** Reconstruye las órbitas. frameRadius: radio del encuadre en a₀ */
   set(shells: Subshell[], z: number, frameRadius: number): void {
+    this.frameRadius = frameRadius;
     this.rings.clear();
     for (const e of this.electrons) e.mesh.removeFromParent();
     this.electrons = [];
@@ -86,6 +90,8 @@ export class BohrView {
     if (!this.group.visible) return;
     // Las órbitas de cara a la cámara
     this.group.quaternion.copy(this.stage.camera.quaternion);
+    const amp = this.jitter * this.frameRadius * 0.03;
+    this.group.position.set((Math.random() * 2 - 1) * amp, (Math.random() * 2 - 1) * amp, 0);
     this.rings.traverse((o) => {
       if (o instanceof THREE.Line) (o.material as THREE.LineBasicMaterial).opacity = 0.7 * this.opacity;
     });
