@@ -6,6 +6,48 @@ import { wavelengthToRgb, rgbCss } from '../physics/wavelength-color';
 import { store, type AppState } from '../state';
 import { chargeLabel, escapeHtml, num } from './format';
 import { ionConfiguration } from '../physics/configuration';
+import { neutronRange } from '../data/nuclides';
+import { decayLabel, formatHalfLife } from '../physics/stability';
+import { superscript } from './format';
+
+export interface NucleusEditor {
+  /** Cambiar el número de protones (cambia el elemento) */
+  setProtons(z: number): void;
+  setNeutrons(n: number): void;
+}
+
+/** Hasta dónde se deja añadir neutrones (el núcleo conocido más rico en neutrones tiene 178) */
+const MAX_NEUTRONS = 200;
+
+function nucleusSection(atom: AtomModel, s: AppState): string {
+  const st = atom.stability;
+  const name = `${superscript(String(atom.massNumber))}${escapeHtml(atom.element.symbol)}`;
+  const range = neutronRange(s.z);
+  let status = '';
+  if (st.kind === 'stable') status = '<div class="nuc-status ok">✓ Núcleo estable: no se desintegra.</div>';
+  else if (st.kind === 'radioactive')
+    status = `<div class="nuc-status warn">☢ Radiactivo${
+      st.halfLifeSeconds !== null ? ` · semivida <strong>${formatHalfLife(st.halfLifeSeconds)}</strong>` : ' · semivida desconocida'
+    }<div class="muted">${escapeHtml(decayLabel(st.decay))}</div></div>`;
+  else
+    status = `<div class="nuc-status bad">✕ Nunca se ha observado este núcleo: si llega a formarse, se deshace casi al instante.${
+      range ? `<div class="muted">Del ${escapeHtml(atom.element.name.toLowerCase())} se conocen núcleos con ${range[0]} a ${range[1]} neutrones (OIEA).</div>` : ''
+    }</div>`;
+  return `
+    <div class="act-section">
+      <div class="act-title">Núcleo <span class="muted">· ${name}</span></div>
+      <div class="nuc-row"><span class="nuc-dot p"></span><span>Protones</span>
+        <button type="button" class="btn" data-p="-1" ${s.z <= 1 ? 'disabled' : ''} aria-label="Quitar un protón">−</button>
+        <strong class="nuc-n">${atom.protons}</strong>
+        <button type="button" class="btn" data-p="1" ${s.z >= 118 ? 'disabled' : ''} aria-label="Añadir un protón">+</button></div>
+      <div class="nuc-row"><span class="nuc-dot n"></span><span>Neutrones</span>
+        <button type="button" class="btn" data-n="-1" ${atom.neutrons <= 0 ? 'disabled' : ''} aria-label="Quitar un neutrón">−</button>
+        <strong class="nuc-n">${atom.neutrons}</strong>
+        <button type="button" class="btn" data-n="1" ${atom.neutrons >= MAX_NEUTRONS ? 'disabled' : ''} aria-label="Añadir un neutrón">+</button></div>
+      ${status}
+      <p class="act-note">Cambiar los protones cambia de elemento; cambiar los neutrones, de isótopo.</p>
+    </div>`;
+}
 
 /** Mínima carga negativa permitida: hasta tres electrones de más */
 const MIN_CHARGE = -3;
@@ -29,7 +71,15 @@ function formatTime(seconds: number): string {
   return `${num(seconds, 2)} s`;
 }
 
-export function renderActions(container: HTMLElement, atom: AtomModel, s: AppState, exc: Excitation): void {
+export function renderActions(
+  container: HTMLElement,
+  atom: AtomModel,
+  s: AppState,
+  exc: Excitation,
+  editor: NucleusEditor,
+  /** Modo sencillo: sin la excitación del electrón */
+  simple = false,
+): void {
   const el = atom.element;
   const canRemove = atom.electrons > 0;
   const canAdd = canAddElectron(atom, s);
@@ -41,9 +91,9 @@ export function renderActions(container: HTMLElement, atom: AtomModel, s: AppSta
         : '';
 
   let excitation = '';
-  if (atom.electrons === 1) {
+  if (atom.electrons === 1 && !simple) {
     const c = exc.current();
-    const mass = atom.isotope ? nuclearMassFromAtomic(atom.isotope.mass, s.z) : undefined;
+    const mass = nuclearMassFromAtomic(atom.atomicMassU, s.z);
     const energy = levelEnergyEv(c.n, s.z, mass);
     const channels = exc.channels();
     const busy = exc.isBusy();
@@ -98,8 +148,9 @@ export function renderActions(container: HTMLElement, atom: AtomModel, s: AppSta
 
   container.innerHTML = `
     <div class="panel actions">
+      ${nucleusSection(atom, s)}
       <div class="act-section">
-        <div class="act-title">Ion</div>
+        <div class="act-title">Ion <span class="muted">· electrones</span></div>
         <div class="ion-row">
           <button type="button" class="btn" data-remove ${canRemove ? '' : 'disabled'} title="Quitar un electrón">− e⁻</button>
           <span class="ion-label">${escapeHtml(chargeLabel(el.symbol, s.charge))}</span>
@@ -120,6 +171,12 @@ export function renderActions(container: HTMLElement, atom: AtomModel, s: AppSta
   on('[data-add]', () => setCharge(s.charge - 1));
   on('[data-neutral]', () => setCharge(0));
   on('[data-emit]', () => exc.emit());
+  container.querySelectorAll<HTMLButtonElement>('[data-p]').forEach((b) =>
+    b.addEventListener('click', () => editor.setProtons(s.z + Number(b.dataset.p))),
+  );
+  container.querySelectorAll<HTMLButtonElement>('[data-n]').forEach((b) =>
+    b.addEventListener('click', () => editor.setNeutrons(atom.neutrons + Number(b.dataset.n))),
+  );
   on('[data-two]', () => exc.twoPhoton());
   container.querySelector<HTMLInputElement>('[data-auto]')?.addEventListener('change', (e) =>
     exc.setAuto((e.target as HTMLInputElement).checked),

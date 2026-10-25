@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "data:fetch": "tsx scripts/fetch-data.ts",
-    "data:build": "tsx scripts/build-data.ts"
+    "data:build": "tsx scripts/build-data.ts",
+    "deploy:cloudflare": "npm run build && npx --yes wrangler@4.152.0 pages deploy dist --project-name atomos --branch main"
   },
   "dependencies": {
     "three": "0.186.1"

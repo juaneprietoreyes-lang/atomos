@@ -19,6 +19,8 @@ export interface AtomScene {
   nucleusRadius: number;
   protons: number;
   neutrons: number;
+  /** 0–1: cuánto vibra el núcleo por ser inestable */
+  instability: number;
   /** Opacidad global de las nubes (0 en modo Bohr) */
   cloudsOpacity: number;
   /** Clave del átomo: si cambia, se reencuadra la cámara */
@@ -116,6 +118,7 @@ export class AtomView {
     this.targetCloudsOpacity = s.cloudsOpacity;
     this.axes.group.visible = s.cloudsOpacity > 0;
     this.nucleus.setNucleons(s.protons, s.neutrons);
+    this.nucleus.jitter = s.instability;
     this.nucleus.targetRadius = s.nucleusRadius;
     if (this.nucleus.radius === 0) this.nucleus.radius = s.nucleusRadius;
 

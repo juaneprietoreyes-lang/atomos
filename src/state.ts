@@ -3,6 +3,8 @@ import { createStore } from './ui/store';
 
 export type ScaleMode = 'didactic' | 'real';
 export type ModelMode = 'quantum' | 'bohr';
+/** Sencillo: menos controles y explicaciones llanas. Completo: todo. */
+export type Level = 'sencillo' | 'completo';
 
 export interface AppState {
   /** Número atómico seleccionado */
@@ -11,6 +13,11 @@ export interface AppState {
   charge: number;
   /** Índice en ElementData.isotopes */
   isotopeIndex: number;
+  /** Neutrones elegidos a mano en el editor del núcleo (null = los del isótopo) */
+  neutrons: number | null;
+  level: Level;
+  /** Durante el juego: ocultar qué elemento es (título, ficha, selección en la tabla) */
+  hideIdentity: boolean;
   scale: ScaleMode;
   occupancy: OccupancyMode;
   /** Colorear por el signo de ψ en vez de por subcapa */
@@ -40,6 +47,9 @@ export const store = createStore<AppState>({
   z: 1,
   charge: 0,
   isotopeIndex: 0,
+  neutrons: null,
+  level: 'completo',
+  hideIdentity: false,
   scale: 'didactic',
   occupancy: 'hund',
   phase: false,

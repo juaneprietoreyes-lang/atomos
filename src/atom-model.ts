@@ -1,5 +1,7 @@
 import { byZ } from './data/loader';
+import { stabilityOf } from './data/nuclides';
 import type { ElementData, Isotope } from './data/types';
+import type { Stability } from './physics/stability';
 import { ionConfiguration, subshellLabel, totalElectrons, type Subshell } from './physics/configuration';
 import { orbitalName } from './physics/harmonics';
 import { radialScale, occupiedOrbitals, type OrbitalSpec } from './physics/orbitals';
@@ -16,6 +18,13 @@ export interface AtomModel {
   exact: boolean;
   protons: number;
   neutrons: number;
+  /** Número másico A = Z + N del núcleo dibujado */
+  massNumber: number;
+  /** Masa atómica (u) del núcleo dibujado: la medida si es un isótopo de la ficha; si no, ≈ A */
+  atomicMassU: number;
+  /** El núcleo dibujado coincide con uno de los isótopos de la ficha */
+  isotopeMatches: boolean;
+  stability: Stability;
 }
 
 export function computeAtom(s: AppState): AtomModel {
@@ -41,6 +50,7 @@ export function computeAtom(s: AppState): AtomModel {
       },
     ];
   }
+  const neutrons = s.neutrons ?? (isotope ? isotope.neutrons : 0);
   return {
     element,
     isotope,
@@ -49,6 +59,10 @@ export function computeAtom(s: AppState): AtomModel {
     orbitals,
     exact: electrons === 1,
     protons: s.z,
-    neutrons: isotope ? isotope.neutrons : 0,
+    neutrons,
+    massNumber: s.z + neutrons,
+    atomicMassU: element.isotopes.find((i) => i.neutrons === neutrons)?.mass ?? s.z + neutrons,
+    isotopeMatches: s.neutrons === null || isotope?.neutrons === s.neutrons,
+    stability: stabilityOf(s.z, neutrons),
   };
 }

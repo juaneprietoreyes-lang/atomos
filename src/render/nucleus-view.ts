@@ -27,6 +27,8 @@ export class NucleusView {
   /** Radio en a₀, actual y objetivo */
   radius = 0;
   targetRadius = 0;
+  /** Vibración del núcleo (0 = estable, 1 = se deshace al instante) */
+  jitter = 0;
 
   constructor() {
     this.group.renderOrder = 0;
@@ -70,5 +72,8 @@ export class NucleusView {
     this.radius = Math.abs(lt - lr) < 1e-4 ? this.targetRadius : Math.exp(lr + (lt - lr) * k);
     this.group.scale.setScalar(this.radius / this.packedRadius);
     this.group.rotation.z += dt * 0.15;
+    // Un núcleo inestable no se está quieto: tiembla más cuanto menos dura
+    const j = this.jitter * this.radius * 0.12;
+    this.group.position.set((Math.random() - 0.5) * j, (Math.random() - 0.5) * j, (Math.random() - 0.5) * j);
   }
 }

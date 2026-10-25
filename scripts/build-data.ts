@@ -2,6 +2,7 @@
  * Cruza las fuentes de data/raw/ y genera:
  *   src/data/elements.json  — los 118 elementos (esquema en src/data/types.ts)
  *   src/data/spectra.json   — líneas de emisión NIST del átomo neutro (visible)
+ *   src/data/nuclides.json  — todos los núcleos conocidos (IAEA/ENSDF): semivida y desintegración
  *   data/INFORME.md         — discrepancias entre fuentes, para revisarlas a mano
  *
  * Prioridad de fuentes:
@@ -375,8 +376,28 @@ async function main(): Promise<void> {
         .join(',\n') +
       '\n}\n',
   );
+  // --- Todos los núcleos conocidos: [Z, N, semivida en s (0 = estable, null = desconocida), modo]
+  const nuclides = iaea
+    .filter((r) => Number(r.z) >= 1 && Number(r.z) <= 118)
+    .map((r) => {
+      const stable = r.half_life === 'STABLE';
+      const t = Number(r.half_life_sec);
+      return [
+        Number(r.z),
+        Number(r.n),
+        stable ? 0 : r.half_life_sec !== '' && Number.isFinite(t) ? Number(t.toPrecision(5)) : null,
+        stable ? '' : r.decay_1,
+      ];
+    });
+  await writeFile(
+    join(ROOT, 'src', 'data', 'nuclides.json'),
+    '[\n' + nuclides.map((n) => JSON.stringify(n)).join(',\n') + '\n]\n',
+  );
+
   await writeFile(join(ROOT, 'data', 'INFORME.md'), report.join('\n'));
-  console.log(`✓ ${elements.length} elementos · ${Object.keys(spectra).length} espectros · informe en data/INFORME.md`);
+  console.log(
+    `✓ ${elements.length} elementos · ${Object.keys(spectra).length} espectros · ${nuclides.length} núcleos · informe en data/INFORME.md`,
+  );
 }
 
 await main();

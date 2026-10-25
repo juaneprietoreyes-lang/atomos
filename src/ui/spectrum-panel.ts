@@ -22,7 +22,7 @@ interface DrawnLine {
 const MAX_BALMER_N = 40;
 
 function hydrogenLines(atom: AtomModel): { visible: DrawnLine[]; outside: string[] } {
-  const mass = atom.isotope ? nuclearMassFromAtomic(atom.isotope.mass, 1) : undefined;
+  const mass = nuclearMassFromAtomic(atom.atomicMassU, 1);
   const nist = SPECTRA.H ?? [];
   const imax = Math.max(...nist.map((l) => l.intensity), 1);
   const visible: DrawnLine[] = [];

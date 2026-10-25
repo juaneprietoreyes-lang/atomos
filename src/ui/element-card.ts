@@ -9,6 +9,8 @@ const EV_TO_KJMOL = 96.48533212;
 export interface CardOptions {
   charge: number;
   isotopeIndex: number;
+  /** Número másico del núcleo dibujado (puede no ser uno de los isótopos de la lista) */
+  drawnMassNumber: number;
   onIsotope: (index: number) => void;
 }
 
@@ -20,9 +22,8 @@ function row(label: string, value: string, extra = ''): string {
 }
 
 export function renderCard(container: HTMLElement, el: ElementData, opts: CardOptions): void {
-  const { charge, isotopeIndex } = opts;
+  const { charge, drawnMassNumber } = opts;
   const cfg = el.configuration;
-  const iso = el.isotopes[isotopeIndex];
 
   // --- Configuración (del átomo neutro o del ion)
   const ionShells = charge === 0 ? cfg.shells : ionConfiguration(cfg.shells, charge);
@@ -87,7 +88,8 @@ export function renderCard(container: HTMLElement, el: ElementData, opts: CardOp
           ? `t½ ${escapeHtml(i.halfLifeText)}`
           : 'radiactivo';
       const ab = i.abundance !== null ? `${num(i.abundance, 3)} %` : '—';
-      return `<button type="button" class="iso${idx === isotopeIndex ? ' is-active' : ''}" data-iso="${idx}" aria-pressed="${idx === isotopeIndex}">
+      const active = i.a === drawnMassNumber;
+      return `<button type="button" class="iso${active ? ' is-active' : ''}" data-iso="${idx}" aria-pressed="${active}">
         <span class="iso-name">${superscript(String(i.a))}${escapeHtml(el.symbol)}</span>
         <span class="iso-n">${i.neutrons} n</span>
         <span class="iso-ab">${ab}</span>
@@ -118,7 +120,7 @@ export function renderCard(container: HTMLElement, el: ElementData, opts: CardOp
       ${row('Estado a 25 °C', phase, phaseExtra)}
     </dl>
     <div class="isotopes">
-      <div class="section-title">Isótopos ${iso ? `<span class="muted">· núcleo dibujado: ${superscript(String(iso.a))}${escapeHtml(el.symbol)}</span>` : ''}</div>
+      <div class="section-title">Isótopos <span class="muted">· núcleo dibujado: ${superscript(String(drawnMassNumber))}${escapeHtml(el.symbol)}</span></div>
       ${
         el.isotopes.length
           ? `<div class="iso-head"><span>isótopo</span><span>neutrones</span><span>abundancia</span><span>estabilidad</span></div>${isoRows}`

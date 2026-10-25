@@ -41,7 +41,7 @@ export class Excitation {
   private context() {
     const s = store.get();
     const atom = computeAtom(s);
-    const mass = atom.isotope ? nuclearMassFromAtomic(atom.isotope.mass, s.z) : undefined;
+    const mass = nuclearMassFromAtomic(atom.atomicMassU, s.z);
     return { z: s.z, mass, oneElectron: atom.electrons === 1 };
   }
 

@@ -9,6 +9,8 @@ export interface PeriodicTable {
   setHeatmap(values: Map<number, number | null> | null): void;
   /** Resalta las coincidencias de una búsqueda (null = sin filtro) */
   setMatches(zs: Set<number> | null): void;
+  /** Destello verde o rojo en una casilla (respuestas del juego) */
+  flash(z: number, kind: 'ok' | 'bad'): void;
 }
 
 export function createPeriodicTable(
@@ -107,6 +109,14 @@ export function createPeriodicTable(
     setMatches(zs) {
       container.classList.toggle('filtering', zs !== null);
       for (const [z, cell] of cells) cell.classList.toggle('is-match', zs?.has(z) ?? false);
+    },
+    flash(z, kind) {
+      const cell = cells.get(z);
+      if (!cell) return;
+      cell.classList.remove('flash-ok', 'flash-bad');
+      void cell.offsetWidth; // reinicia la animación
+      cell.classList.add(kind === 'ok' ? 'flash-ok' : 'flash-bad');
+      setTimeout(() => cell.classList.remove('flash-ok', 'flash-bad'), 2600);
     },
   };
 }
