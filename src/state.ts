@@ -20,6 +20,20 @@ export interface AppState {
   hidden: ReadonlySet<string>;
   /** Estado excitado del electrón del hidrógeno (null = fundamental) */
   excited: { n: number; l: number; m: number } | null;
+  /** Último fotón emitido o absorbido (para el panel y el espectro) */
+  lastPhoton: PhotonEvent | null;
+}
+
+export interface PhotonEvent {
+  kind: 'emit' | 'absorb' | 'two-photon';
+  nLower: number;
+  nUpper: number;
+  /** Longitud de onda en el vacío (nm) */
+  vacuumNm: number;
+  /** La que se da en las tablas: en aire entre 200 y 2000 nm, en vacío fuera */
+  tableNm: number;
+  /** Vida media del estado de partida en segundos (emisión) */
+  lifetimeS: number | null;
 }
 
 export const store = createStore<AppState>({
@@ -32,4 +46,5 @@ export const store = createStore<AppState>({
   model: 'quantum',
   hidden: new Set(),
   excited: null,
+  lastPhoton: null,
 });

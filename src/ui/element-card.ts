@@ -49,7 +49,11 @@ export function renderCard(container: HTMLElement, el: ElementData, opts: CardOp
   const ie = el.ionizationEnergy;
   const ieText = ie
     ? `${num(ie.eV, 3)} eV <span class="muted">· ${num(ie.eV * EV_TO_KJMOL, 1)} kJ/mol</span>` +
-      (ie.quality !== 'medida' ? ` ${tag(ie.quality === 'teórica' ? 'teórica' : 'semiempírica', 'warn')}` : '')
+      (ie.quality === 'teórica'
+        ? ` <span title="NIST la da calculada (ab initio): en átomos de 1–2 electrones el cálculo es más preciso que la medida; en los superpesados es lo único que hay">${tag('calculada', 'warn')}</span>`
+        : ie.quality === 'semiempírica'
+          ? ` <span title="NIST la obtiene interpolando o extrapolando datos experimentales">${tag('semiempírica', 'warn')}</span>`
+          : '')
     : unknown('desconocida');
 
   // --- Radio

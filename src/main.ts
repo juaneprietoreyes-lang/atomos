@@ -3,14 +3,21 @@ import { computeAtom, type AtomModel } from './atom-model';
 import { byZ, ELEMENTS } from './data/loader';
 import { BOHR_RADIUS_FM, BOHR_RADIUS_PM } from './physics/constants';
 import { nuclearRadiusFm } from './physics/nucleus';
+import { Excitation } from './excitation';
 import { AtomView, frameRadius } from './render/atom-view';
+import { BohrView } from './render/bohr-view';
+import { PhotonFx } from './render/photon';
 import { prewarmAll } from './render/sample-cache';
 import { createStage } from './render/scene';
 import { store, type AppState } from './state';
+import { renderActions } from './ui/actions-panel';
 import { renderCard } from './ui/element-card';
 import { chargeLabel, escapeHtml, num, superscript } from './ui/format';
+import { createHeatmapControls } from './ui/heatmap-controls';
 import { renderOrbitalLegend } from './ui/orbital-legend';
 import { createPeriodicTable } from './ui/periodic-table';
+import { createSearch } from './ui/search';
+import { SpectrumPanel } from './ui/spectrum-panel';
 import { createHud, segmented } from './ui/viewer-hud';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -19,14 +26,29 @@ const viewer = $('viewer');
 const stage = createStage(viewer);
 const view = new AtomView(stage);
 const hud = createHud(viewer);
+const bohr = new BohrView(stage, hud.labels);
+const photons = new PhotonFx(stage, hud.labels);
+const excitation = new Excitation(photons, () => frameRadius(computeAtom(store.get()).orbitals));
+excitation.onChange = () => render(store.get());
+const spectrum = new SpectrumPanel(hud.bottom);
 const expandedSubshells = new Set<string>();
 
 const table = createPeriodicTable($('ptable'), $('category-legend'), (z) => selectElement(z));
+createSearch($('search'), (zs) => table.setMatches(zs), (z) => selectElement(z));
+createHeatmapControls($('table-tools'), $('heat-legend'), table);
 
 function selectElement(z: number): void {
   if (z === store.get().z) return;
   expandedSubshells.clear();
-  store.set({ z, charge: 0, isotopeIndex: byZ(z).defaultIsotope, hidden: new Set(), excited: null });
+  excitation.reset();
+  store.set({
+    z,
+    charge: 0,
+    isotopeIndex: byZ(z).defaultIsotope,
+    hidden: new Set(),
+    excited: null,
+    lastPhoton: null,
+  });
 }
 
 /** Radio del núcleo en a₀: el real (R = 1,2 fm·A^⅓) o uno ampliado para verlo */
@@ -64,6 +86,15 @@ function renderTitle(atom: AtomModel, s: AppState): void {
 
 function renderControls(s: AppState): void {
   hud.controls.replaceChildren(
+    segmented(
+      'Modelo',
+      [
+        { value: 'quantum', label: 'Cuántico', title: 'Orbitales como nubes de probabilidad' },
+        { value: 'bohr', label: 'Bohr', title: 'Modelo histórico de órbitas circulares (1913)' },
+      ],
+      s.model,
+      (model) => store.set({ model }),
+    ),
     segmented(
       'Escala',
       [
@@ -127,6 +158,11 @@ function render(s: AppState, prev?: AppState): void {
     store.set({ hidden }),
   );
   renderScaleInfo(atom, s);
+  renderActions(hud.actions, atom, s, excitation);
+  spectrum.render(atom, s.charge, s.lastPhoton);
+  hud.legend.hidden = s.model !== 'quantum' || atom.electrons === 0;
+  bohr.set(atom.shells.length && s.excited && atom.electrons === 1 ? [{ n: s.excited.n, l: s.excited.l, electrons: 1 }] : atom.shells, s.z, frameRadius(atom.orbitals));
+  bohr.targetOpacity = s.model === 'bohr' ? 1 : 0;
 
   view.update({
     orbitals: atom.orbitals,
@@ -153,4 +189,4 @@ if (import.meta.env.DEV || new URLSearchParams(location.search).has('fps')) {
 setTimeout(() => void prewarmAll(), 1200);
 
 // Acceso rápido para pruebas desde la consola
-Object.assign(window, { atomos: { store, elements: ELEMENTS, stage, view } });
+Object.assign(window, { atomos: { store, elements: ELEMENTS, stage, view, excitation } });

@@ -66,7 +66,7 @@ export interface ElementData {
   ionizationEnergy: {
     eV: number;
     uncertainty: number | null;
-    /** NIST: sin marca = medida; ( ) = semiempírica; [ ] = teórica */
+    /** NIST: sin marca = medida; [ ] = semiempírica (interpolada o extrapolada); ( ) = calculada ab initio */
     quality: 'medida' | 'semiempírica' | 'teórica';
   } | null;
   /** Radios en pm, cada uno de su fuente/método; null si no se conoce */

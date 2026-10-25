@@ -108,6 +108,7 @@ export class AtomView {
     for (const [key, cloud] of this.clouds) if (!active.has(key)) cloud.targetOpacity = 0;
 
     this.targetCloudsOpacity = s.cloudsOpacity;
+    this.axes.group.visible = s.cloudsOpacity > 0;
     this.nucleus.setNucleons(s.protons, s.neutrons);
     this.nucleus.targetRadius = s.nucleusRadius;
     if (this.nucleus.radius === 0) this.nucleus.radius = s.nucleusRadius;

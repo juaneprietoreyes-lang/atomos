@@ -229,7 +229,8 @@ async function main(): Promise<void> {
       ionizationEnergy = {
         eV: Number(n['Ionization Energy (eV)']),
         uncertainty: n['Uncertainty (b) (eV)'] ? Number(n['Uncertainty (b) (eV)']) : null,
-        quality: prefix === '[' ? 'teórica' : prefix === '(' ? 'semiempírica' : 'medida',
+        // NIST: [ ] = interpolación/extrapolación (semiempírica); ( ) = cálculo ab initio
+        quality: prefix === '[' ? 'semiempírica' : prefix === '(' ? 'teórica' : 'medida',
       };
     } else missing.push(`${b.symbol}: 1ª energía de ionización (NIST no la tiene) → «desconocida»`);
 

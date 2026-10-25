@@ -8,18 +8,21 @@ export interface Hud {
   actions: HTMLElement;
   bottom: HTMLElement;
   fps: HTMLElement;
+  /** Capa para etiquetas que siguen objetos 3D (fotones, órbitas de Bohr) */
+  labels: HTMLElement;
 }
 
 export function createHud(viewer: HTMLElement): Hud {
   viewer.insertAdjacentHTML(
     'beforeend',
-    `<div class="hud hud-top-left">
+    `<div class="label-layer" id="label-layer"></div>
+     <div class="hud hud-top-left">
        <div class="hud-title" id="hud-title"></div>
        <div class="hud-badge" id="hud-badge"></div>
+       <div class="hud-scale panel" id="hud-scale" hidden></div>
      </div>
      <div class="hud hud-top-right" id="hud-controls"></div>
      <div class="hud hud-left panel" id="hud-legend"></div>
-     <div class="hud hud-scale panel" id="hud-scale" hidden></div>
      <div class="hud hud-right" id="hud-actions"></div>
      <div class="hud hud-bottom" id="hud-bottom"></div>
      <div class="hud hud-fps" id="hud-fps" hidden></div>`,
@@ -34,6 +37,7 @@ export function createHud(viewer: HTMLElement): Hud {
     actions: $('hud-actions'),
     bottom: $('hud-bottom'),
     fps: $('hud-fps'),
+    labels: $('label-layer'),
   };
 }
 

@@ -56,15 +56,17 @@ export function createStage(container: HTMLElement): Stage {
   const callbacks: ((dt: number, t: number) => void)[] = [];
   let frameAnim: { from: number; to: number; t: number } | null = null;
 
+  // El tamaño lo marca el CSS del lienzo (en móvil no ocupa todo el visor)
+  const canvas = renderer.domElement;
   function resize(): void {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  new ResizeObserver(resize).observe(container);
+  new ResizeObserver(resize).observe(canvas);
   resize();
 
   /** Distancia a la que una esfera de radio r cabe en el encuadre */
@@ -113,7 +115,7 @@ export function createStage(container: HTMLElement): Stage {
       }
     },
     fitDistance,
-    height: () => container.clientHeight,
+    height: () => canvas.clientHeight,
     fps: () => fpsValue,
   };
 }

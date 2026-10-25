@@ -5,6 +5,7 @@ import {
   einsteinA,
   levelEnergyEv,
   lifetime,
+  lineName,
   tableWavelengthNm,
   vacuumWavelengthNm,
 } from '../../src/physics/hydrogen';
@@ -76,5 +77,21 @@ describe('coeficientes de Einstein A del hidrógeno (valores NIST)', () => {
     const ch = decayChannels(3, 1);
     expect(ch.find((c) => c.n === 1)!.branching).toBeCloseTo(0.882, 2);
     expect(ch.find((c) => c.n === 2)!.branching).toBeCloseTo(0.118, 2);
+  });
+});
+
+describe('átomos de un electrón con Z > 1 y nombres de líneas', () => {
+  it('He⁺: λ escala como 1/Z² y A como Z⁴ (mismas ramificaciones)', () => {
+    const heMass = 4.00260325413 - 2 * ELECTRON_MASS_U;
+    // He II 4→3 (468,6 nm en aire, la línea clásica de Fowler)
+    expect(tableWavelengthNm(3, 4, 2, heMass)).toBeCloseTo(468.57, 1);
+    const ratio = einsteinA(2, 1, 1, 0, heMass, 2) / einsteinA(2, 1, 1, 0, heMass, 1);
+    expect(ratio).toBeCloseTo(16, 10);
+  });
+
+  it('nombres: Hα, Ly-β, Pa-α', () => {
+    expect(lineName(2, 3)).toBe('Balmer Hα');
+    expect(lineName(1, 3)).toBe('Lyman Ly-β');
+    expect(lineName(3, 4)).toBe('Paschen Pa-α');
   });
 });
