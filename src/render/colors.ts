@@ -13,6 +13,11 @@ export function subshellColor(n: number, l: number): THREE.Color {
 
 export const subshellCss = (n: number, l: number): string => `#${subshellColor(n, l).getHexString()}`;
 
+/** Modo sencillo: un color por capa (K azul, L verde, M amarillo, N naranja, O rosa, P violeta, Q cian) */
+const SHELL_HEX = ['#5aa9ff', '#5fe08a', '#ffd84d', '#ff9a4a', '#ff6fa8', '#b58cff', '#4fe3e0', '#cfd8e8'];
+export const shellCss = (n: number): string => SHELL_HEX[n - 1] ?? '#cfd8e8';
+export const shellColor = (n: number): THREE.Color => new THREE.Color(shellCss(n));
+
 /** Fase de ψ: lóbulos positivos cálidos, negativos fríos (convención habitual) */
 export const PHASE_POSITIVE = new THREE.Color('#ff9a62');
 export const PHASE_NEGATIVE = new THREE.Color('#5fb2ff');

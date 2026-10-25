@@ -77,8 +77,6 @@ export function renderActions(
   s: AppState,
   exc: Excitation,
   editor: NucleusEditor,
-  /** Modo sencillo: sin la excitación del electrón */
-  simple = false,
 ): void {
   const el = atom.element;
   const canRemove = atom.electrons > 0;
@@ -91,7 +89,7 @@ export function renderActions(
         : '';
 
   let excitation = '';
-  if (atom.electrons === 1 && !simple) {
+  if (atom.electrons === 1) {
     const c = exc.current();
     const mass = nuclearMassFromAtomic(atom.atomicMassU, s.z);
     const energy = levelEnergyEv(c.n, s.z, mass);

@@ -21,7 +21,7 @@ import { renderOrbitalLegend } from './ui/orbital-legend';
 import { createPeriodicTable } from './ui/periodic-table';
 import { createSearch } from './ui/search';
 import { shake } from './ui/shake';
-import { renderParticles, renderSimpleCard } from './ui/simple-view';
+import { renderBuilder, renderParticles, renderSimpleCard } from './ui/simple-view';
 import { SpectrumPanel } from './ui/spectrum-panel';
 import { createHud, segmented } from './ui/viewer-hud';
 
@@ -40,7 +40,7 @@ const expandedSubshells = new Set<string>();
 
 const table = createPeriodicTable($('ptable'), $('category-legend'), (z) => onTablePick(z));
 createSearch($('search'), (zs) => table.setMatches(zs), (z) => onTablePick(z));
-createHeatmapControls($('table-tools'), $('heat-legend'), table);
+const heatmap = createHeatmapControls($('table-tools'), $('heat-legend'), table);
 
 // --- Nivel (sencillo / completo), recordado en este navegador
 const LEVEL_KEY = 'atomos-nivel';
@@ -130,9 +130,21 @@ const nucleusEditor = {
   },
 };
 
+/** Modo sencillo: además de los protones y neutrones, se cambian los electrones */
+const simpleBuilder = {
+  ...nucleusEditor,
+  setCharge(charge: number) {
+    excitation.reset();
+    store.set({ charge, excited: null, lastPhoton: null, hidden: new Set() });
+  },
+};
+
+/** En el modo sencillo no hay botón de escala: siempre la didáctica */
+const effectiveScale = (s: AppState) => (s.level === 'sencillo' ? 'didactic' : s.scale);
+
 /** Radio del núcleo en a₀: el real (R = 1,2 fm·A^⅓) o uno ampliado para verlo */
 function nucleusRadius(atom: AtomModel, s: AppState): number {
-  if (s.scale === 'real') return nuclearRadiusFm(atom.massNumber) / BOHR_RADIUS_FM;
+  if (effectiveScale(s) === 'real') return nuclearRadiusFm(atom.massNumber) / BOHR_RADIUS_FM;
   return frameRadius(atom.orbitals) * 0.03;
 }
 
@@ -181,6 +193,10 @@ function renderTitle(atom: AtomModel, s: AppState): void {
   const el = atom.element;
   if (s.hideIdentity) {
     hud.title.innerHTML = `<div class="hud-symbol">?</div><div class="hud-sub">Elemento misterioso</div>`;
+  } else if (s.level === 'sencillo') {
+    hud.title.innerHTML = `
+      <div class="hud-symbol">${escapeHtml(chargeLabel(el.symbol, s.charge))}</div>
+      <div class="hud-sub">${escapeHtml(el.name)}${s.charge !== 0 ? ` · ion ${s.charge > 0 ? 'positivo' : 'negativo'}` : ''}</div>`;
   } else {
     const kind = s.charge > 0 ? 'catión' : s.charge < 0 ? 'anión' : 'átomo neutro';
     hud.title.innerHTML = `
@@ -190,15 +206,31 @@ function renderTitle(atom: AtomModel, s: AppState): void {
   const simple = s.level === 'sencillo';
   hud.badge.innerHTML =
     s.model === 'bohr'
-      ? '<span class="badge badge-bohr">Modelo histórico simplificado (Bohr, 1913)</span>'
+      ? simple
+        ? '<span class="badge badge-bohr">Dibujo antiguo (Bohr): de verdad los electrones no dan vueltas así</span>'
+        : '<span class="badge badge-bohr">Modelo histórico simplificado (Bohr, 1913)</span>'
       : simple
-        ? '<span class="badge badge-exact">Nube de electrones: donde más brilla, más probable es encontrarlos</span>'
+        ? '<span class="badge badge-exact">La nube es donde suelen estar los electrones</span>'
         : atom.exact
           ? '<span class="badge badge-exact">Solución exacta de Schrödinger (un electrón, sin relatividad)</span>'
           : '<span class="badge badge-approx" title="Cada electrón se describe con un orbital hidrogenoide y una carga nuclear efectiva (reglas de Slater). La función de onda real de varios electrones no tiene solución exacta.">Aproximación: orbitales hidrogenoides + Z<sub>ef</sub> de Slater</span>';
 }
 
 function renderControls(s: AppState): void {
+  if (s.level === 'sencillo') {
+    hud.controls.replaceChildren(
+      segmented(
+        'Ver',
+        [
+          { value: 'quantum', label: '☁️ Nube', title: 'Cómo es de verdad: una nube de probabilidad' },
+          { value: 'bohr', label: '⭕ Capas', title: 'Dibujo antiguo de Bohr, con los electrones en círculos' },
+        ],
+        s.model,
+        (model) => store.set({ model }),
+      ),
+    );
+    return;
+  }
   const controls = [
     segmented(
       'Modelo',
@@ -244,7 +276,7 @@ function renderControls(s: AppState): void {
 }
 
 function renderScaleInfo(atom: AtomModel, s: AppState): void {
-  hud.scaleInfo.hidden = s.scale !== 'real' || s.model !== 'quantum' || s.hideIdentity;
+  hud.scaleInfo.hidden = effectiveScale(s) !== 'real' || s.model !== 'quantum' || s.hideIdentity;
   if (hud.scaleInfo.hidden) return;
   const rNucFm = nuclearRadiusFm(atom.massNumber);
   const { pm, kind } = atomRadiusPm(atom);
@@ -266,9 +298,10 @@ function render(s: AppState, prev?: AppState): void {
   const simple = s.level === 'sencillo';
   table.setSelected(s.hideIdentity ? 0 : s.z);
 
+  heatmap.setVisible(!simple);
   if (!game.active) {
     const onIsotope = (i: number) => store.set({ isotopeIndex: i, neutrons: null });
-    if (simple) renderSimpleCard($('card'), atom, s.charge, onIsotope);
+    if (simple) renderSimpleCard($('card'), atom, s.charge);
     else
       renderCard($('card'), atom.element, {
         charge: s.charge,
@@ -296,11 +329,13 @@ function render(s: AppState, prev?: AppState): void {
             ...new Set(atom.orbitals.map((o) => o.subshell)),
           ].join(', ')}).`,
   );
-  renderActions(hud.actions, atom, s, excitation, nucleusEditor, simple);
+  if (simple) renderBuilder(hud.actions, atom, s.charge, simpleBuilder);
+  else renderActions(hud.actions, atom, s, excitation, nucleusEditor);
   hud.actions.hidden = s.hideIdentity;
   if (!simple) spectrum.render(atom, s.charge, s.lastPhoton);
   hud.bottom.hidden = simple || s.hideIdentity;
   hud.legend.hidden = s.hideIdentity || (!simple && (s.model !== 'quantum' || atom.electrons === 0));
+  hud.legend.classList.toggle('is-simple', simple);
   bohr.set(
     atom.shells.length && s.excited && atom.electrons === 1 ? [{ n: s.excited.n, l: s.excited.l, electrons: 1 }] : atom.shells,
     s.z,
@@ -318,6 +353,8 @@ function render(s: AppState, prev?: AppState): void {
     protons: atom.protons,
     neutrons: atom.neutrons,
     instability,
+    colorBy: simple ? 'shell' : 'subshell',
+    showAxes: !simple,
     cloudsOpacity: s.model === 'quantum' ? 1 : 0,
     frameKey: `${s.z}|${s.charge}|${s.excited ? `${s.excited.n}${s.excited.l}` : ''}`,
   });

@@ -29,7 +29,11 @@ const PROPS: Record<Exclude<Property, 'category'>, { label: string; unit: string
 };
 
 /** Selector «Colorear por…» de la tabla y su leyenda de gradiente */
-export function createHeatmapControls(container: HTMLElement, gradientLegend: HTMLElement, table: PeriodicTable): void {
+export function createHeatmapControls(
+  container: HTMLElement,
+  gradientLegend: HTMLElement,
+  table: PeriodicTable,
+): { setVisible(visible: boolean): void } {
   let current: Property = 'category';
 
   function apply(): void {
@@ -68,4 +72,14 @@ export function createHeatmapControls(container: HTMLElement, gradientLegend: HT
       <p class="grad-note">${p.note} Hay ${ELEMENTS.length - known.length} elementos sin dato.</p>`;
   }
   apply();
+  return {
+    // En el modo sencillo no hay mapa de calor: se vuelve a los colores por familia
+    setVisible(visible) {
+      container.hidden = !visible;
+      if (!visible && current !== 'category') {
+        current = 'category';
+        apply();
+      }
+    },
+  };
 }

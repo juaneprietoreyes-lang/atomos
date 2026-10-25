@@ -88,6 +88,10 @@ export class OrbitalCloud {
     this.geometry.setDrawRange(0, Math.min(count, this.capacity));
   }
 
+  setColor(color: THREE.Color): void {
+    (this.material.uniforms.uColor.value as THREE.Color).copy(color);
+  }
+
   setPhase(on: boolean): void {
     this.material.uniforms.uPhase.value = on ? 1 : 0;
   }

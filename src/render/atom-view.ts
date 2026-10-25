@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { displayedMeanRadius, type OrbitalSpec } from '../physics/orbitals';
 import { Axes } from './axes';
-import { PHASE_NEGATIVE, PHASE_POSITIVE, subshellColor } from './colors';
+import { PHASE_NEGATIVE, PHASE_POSITIVE, shellColor, subshellColor } from './colors';
 import { NucleusView } from './nucleus-view';
 import { OrbitalCloud } from './orbital-cloud';
 import { cachedSample, getSample, MAX_POINTS, sampleKey } from './sample-cache';
@@ -21,6 +21,9 @@ export interface AtomScene {
   neutrons: number;
   /** 0–1: cuánto vibra el núcleo por ser inestable */
   instability: number;
+  /** Color por subcapa (completo) o por capa K, L, M… (sencillo) */
+  colorBy: 'subshell' | 'shell';
+  showAxes: boolean;
   /** Opacidad global de las nubes (0 en modo Bohr) */
   cloudsOpacity: number;
   /** Clave del átomo: si cambia, se reencuadra la cámara */
@@ -99,6 +102,7 @@ export class AtomView {
         this.clouds.set(key, cloud);
         this.cloudGroup.add(cloud.points);
       }
+      cloud.setColor(s.colorBy === 'shell' ? shellColor(o.n) : subshellColor(o.n, o.l));
       cloud.targetScale = o.scale;
       cloud.targetOpacity = s.hidden.has(o.label) ? 0 : 1;
       // Los ocultos conservan sus puntos mientras se desvanecen
@@ -121,7 +125,7 @@ export class AtomView {
     for (const [key, cloud] of this.clouds) if (!active.has(key)) cloud.targetOpacity = 0;
 
     this.targetCloudsOpacity = s.cloudsOpacity;
-    this.axes.group.visible = s.cloudsOpacity > 0;
+    this.axes.group.visible = s.cloudsOpacity > 0 && s.showAxes;
     this.nucleus.setNucleons(s.protons, s.neutrons);
     this.nucleus.jitter = s.instability;
     this.instability = s.instability;
