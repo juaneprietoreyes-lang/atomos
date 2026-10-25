@@ -62,7 +62,8 @@ const game = new GamePanel($('game'), table, {
   },
   restore() {
     excitation.reset();
-    if (beforeGame) store.set({ ...beforeGame, hideIdentity: false });
+    // Aunque no se guardara el estado de antes, nunca se queda oculto el elemento
+    store.set({ ...(beforeGame ?? {}), hideIdentity: false });
     beforeGame = null;
   },
   onActiveChange(active) {
